@@ -8,6 +8,12 @@ source $config
 
 CMD=`basename $0`
 
+# Used for case statement below
+PN=`basename $0`
+
+# See getopts at bottom of file
+getopts_flags="hupatydbcmv"
+
 show_help() {
 	tabs 4
 	echo -e "Usage:
@@ -17,17 +23,24 @@ show_help() {
 
 	echo -e "Options:"
 	echo -e "\t-h\tThis help message"
-	echo -e "\t-p\tSend text to pastebin.com using your user account"
-	echo -e "\t-u\tSend text to public pastebin.com"
-	echo -e "\t-w\tSend text to public webpage pastebin.com using form post (no API)"
-	echo -e "\t-s\tSend text to sprunge.us"
-	echo -e "\t-c\tSend text to pastebin.ca"
-	echo -e "\t-a\tSend text to pastie.org"
-	echo -e "\t-t\tSend text to paste2.org"
-	echo -e "\t-r\tSend text to privatepaste.com"	
-	echo -e "\t-n\tSend text to tny.cz"
-	echo -e "\t-x\tSend text to clitxt.com"
-	echo -e "\t-b\tSend text to cxg.de"
+	echo -e "\t-u\tSend text to pastebin.com using your user account" # works as of Jul 2024
+	echo -e "\t-p\tSend text to public pastebin.com" # works as of Jul 2024
+	echo -e "\t-a\tSend text to pastie.org (default)" # Works as of Jul 2024
+	echo -e "\t-t\tSend text to paste2.org" # works as of Jul 2024
+	echo -e "\t-y\tSend text to paste.rs" # works as of Jul 2024
+	echo -e "\t-d\tSend text to dpaste.com" # works as of Jul 2024
+	echo -e "\t-b\tSend text to paste-bin.xyz" # Currently not working (only returns index.php)
+	echo -e "\t-c\tSend text to 0paste.com/paste.myconan.net" # works as of Jul 2024
+	echo -e "\t-m\tSend text to nopaste.ml" # works as of Jul 2024
+	echo -e "\t-v\tSend text to vpaste.net" # works as of Jul 2024
+	#echo -e "\t-e\tSend text to hastebin.com" # DOES NOT work as of Jul 2024. Goes to toptal
+	#echo -e "\t-n\tSend text to tny.cz" # As of Jul 2024 Fwds to cControl website with captcha
+	#echo -e "\t-s\tSend text to sprunge.us" # DOES NOT work as of Jul 2024
+	#echo -e "\t-X\tSend text to paste.ee" # NO DNS RECORD FOUND as of Jul 2024
+	#echo -e "\t-g\tSend text to ghostbin.com - Not Implemented\n\t\tyet (Has Captcha so may not implement)"
+	#echo -e "\t-w\tSend text to public webpage pastebin.com using form post (no API)" # web public discontinued. Need to use API
+	echo -e "\t-i\tSend text to textbin.net - Not Implemented yet"
+	echo -e "\t-txt\tSend text to txtbin.net - Not implemented yet"
 
 	echo -e "\n\tThe link to the pastebin will be outputted"
 	echo -e "\n\tAdd '|$xclip && echo \`$xclip -o\`' to end of command to copy link"
@@ -138,30 +151,21 @@ get_paste() {
 	done
 }
 
-while getopts ":hspuwcatrxb" opt; do
+#ARGS=`getopt -a --name "$PN" --l sprunge,pastebin,pidgin,pb,public,ca,pastie,help --o spcuahr -- "$@"`
+#eval set -- $ARGS
+
+while getopts ":$getopts_flags" opt; do
 	case $opt in
 		h)
 			show_help;
 			;;
-		s)
+		u)
 			get_paste;
-			sprunge
+			pastebin "user"
 			;;
 		p)
 			get_paste;
-			pastebin_user
-			;;
-		u)
-			get_paste;
-			pastebin_public
-			;;
-		w)
-			get_paste;
-			pastebin_web_public
-			;;
-		c)
-			get_paste;
-			pastebin_ca
+			pastebin "public"
 			;;
 		a)
 			get_paste;
