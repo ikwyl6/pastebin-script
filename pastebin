@@ -1,21 +1,20 @@
 #!/bin/bash
 
-# Author: ikwyl6 <ikwyl6@gmail.com>
+# Author: ikwyl6 <ikwyl6@protonmail.com>
 
-name="ikwyl6"
-ca_api_key=""; # pastebin.ca
-api_key="" # pastebin.com
-user_key="" # pastebin.com
-xclip="xclip -selection c" # copies to clipboard for ctrl-v 
+# config file
+config=$HOME/.pastebin.conf
+source $config
 
 CMD=`basename $0`
 
 show_help() {
+	tabs 4
 	echo -e "Usage:
 	echo sometexttowritetopastebin | $CMD [option]
 	make 2>&1 | $CMD [option]
-	$CMD [option] < file\n"; 
-	
+	$CMD [option] < file\n";
+
 	echo -e "Options:"
 	echo -e "\t-h\tThis help message"
 	echo -e "\t-p\tSend text to pastebin.com using your user account"
@@ -31,12 +30,14 @@ show_help() {
 	echo -e "\t-b\tSend text to cxg.de"
 
 	echo -e "\n\tThe link to the pastebin will be outputted"
-
+	echo -e "\n\tAdd '|$xclip && echo \`$xclip -o\`' to end of command to copy link"
+	tabs -8
 	exit 0;
 
 }
 
 sprunge() {
+	echo
 	# -s option: silent
 	# -F option: pass info to a <form>
 	echo "`curl -sF "sprunge=$paste" http://sprunge.us`?sh" | $xclip && echo `$xclip -o`
