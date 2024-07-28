@@ -2,16 +2,16 @@
 linux command line script that uploads text to numerous pastebin-type sites. These sites include:
 
 * pastebin.com: http://pastebin.com
-~~* sprunge.us: http://sprunge.us~~
-~~* pastebin.ca: http://pastebin.ca~~
+* ~~sprunge.us: http://sprunge.us~~
+* ~~pastebin.ca: http://pastebin.ca~~
 * pasteie.org: http://pasteie.org
 * paste2.org: http://paste2.org
 * paste.rs
 * dpaste.com
-~~* privatepaste.com: http://privatepaste.com~~
-~~* tny.cz: http://tny.cz~~
-~~* clitxt.com: http://clitxt.com~~
-~~* cxg.de: http://cxg.de~~
+* ~~privatepaste.com: http://privatepaste.com~~
+* ~~tny.cz: http://tny.cz~~
+* ~~clitxt.com: http://clitxt.com~~
+* ~~cxg.de: http://cxg.de~~
 * paste-bin.xyz
 * 0paste.com/paste.myconan.net
 * nopaste.ml
