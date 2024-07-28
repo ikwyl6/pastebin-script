@@ -49,19 +49,61 @@ show_help() {
 
 }
 
+# curl options
+# --data-urlencode: Sent url encoded
+# -d: data to be sent on the form submission
+
+# Get new pastebin user_key. Redirecting echo statements to stderr (>&2)
+# as the function needs to output $auk. If >&2 is not used then the
+# output for pastebin_get_user_key is appended with all echo statements
+pastebin_get_user_key() {
+	if [[ DEBUG -eq 1 ]]; then >&2 echo "pastebin_get_user_key(): getting new api_user_key"
+	fi
+	read -p "Enter pastebin password for $name: " -s passwd </dev/tty
+	>&2 echo "";
+	auk=$(curl -s -X POST -d "api_dev_key=$api_key" -d "api_user_name=$name" -d "api_user_password=$passwd" https://pastebin.com/api/api_login.php)
+	echo $auk
+	>&2 echo "end of pastebin_get_user_key()"
+}
+
+# Post text to pastebin.com
+# For 'user' and if the api_user_key is not valid or missing it will get
+# another key using pastebin_get_user_key() above
+pastebin() {
+	# If api_user_key is not used then a guest/public paste is created
+	if [[ "$1" == "public" ]]; then
+		curl -X POST https://pastebin.com/api/api_post.php -d "api_paste_code=$paste" -d "api_dev_key=$api_key" -d "api_option=paste"
+		echo
+	elif [[ "$1" == "user" ]]; then
+		ret=$(curl -s -X POST https://pastebin.com/api/api_post.php -d "api_paste_code=$paste" -d "api_dev_key=$api_key" -d "api_user_key=$api_user_key" -d "api_option=paste" )
+		if [[ DEBUG -eq 1 ]]; then echo "$ret"
+		fi
+		if [[ "$ret" == "Bad API request, invalid api_user_key" ]]; then
+			if [[ DEBUG -eq 1 ]]; then echo "Getting new pastebin api_user_key"
+			fi
+			auk=$(pastebin_get_user_key)
+			if [[ DEBUG -eq 1 ]]; then echo "api_user_key = $auk this should be saved in this script for future use"
+			fi
+			if [[ ! -z "$auk" ]]; then
+				if [[ DEBUG -eq 1 ]]; then echo "Running API again with new api_user_key"
+				fi
+				curl -X POST https://pastebin.com/api/api_post.php -d "api_paste_code=$paste" -d "api_dev_key=$api_key" -d "api_user_key=$api_user_key" -d "api_option=paste"
+			else
+				echo "API returned empty api_user_key"
+			fi
+		else
+			if [[ DEBUG -eq 1 ]]; then echo "end of else"
+			fi
+			echo $ret
+		fi
+	fi
+}
+# July 2024 does not work
 sprunge() {
 	echo
 	# -s option: silent
 	# -F option: pass info to a <form>
-	echo "`curl -sF "sprunge=$paste" http://sprunge.us`?sh" | $xclip && echo `$xclip -o`
-}
-
-# pastebin public discontinued, need to have acct + API for public post.
-pastebin_public() {
-	# pastebin.com - public
-	# Used --data-urlencode for ampersands being treated as bash variables.
-	# api_paste_private: 0=public 1=unlisted 2=private
-	curl -s --data-urlencode "api_paste_code=$paste" -d "api_dev_key=$api_key&api_paste_private=0&api_option=paste&api_paste_expire_date=1M" http://pastebin.com/api/api_post.php | $xclip && echo `$xclip -o`
+	# echo "`curl -sF "sprunge=$paste" http://sprunge.us`?sh" # | $xclip && echo `$xclip -o`
 }
 
 # Using pastebin.com web form to submit public paste without an API key, other API requires you to
@@ -71,79 +113,103 @@ pastebin_web_public() {
 	post_key=`curl -s http://pastebin.com | grep post_key pastebin.com.html |grep -E "[[:alnum:]]{25}" | awk -F \" '{print $4}'`
 	#echo "post_key: $post_key";
 	url=$(curl -sL -d "paste_code=$paste&post_key$post_key&submit_hidden=submit_hidden" http://pastebin.com/post.php -o /dev/null -w "%{url_effective}");
-	echo $url | $xclip;
+	#echo $url | $xclip;
 	echo $url;
 }
 
-pastebin_user() {
-	# pastebin.com - user login
-	curl -s --data-urlencode "api_paste_code=$paste" -d "api_dev_key=$api_key&api_user_key=$user_key&api_option=paste" http://pastebin.com/api/api_post.php | $xclip
-	echo "`$xclip -o`"; #echo;
-}
-
-# As of March 11, 2013: site keeps saying ID invalid or post expired.
-pastebin_ca() {
-	# pastebin.ca
-	# expiry=1 year
-	root="http://pastebin.ca/"
-	ret=`curl -s -F "content=$paste" http://pastebin.ca/quiet-paste.php?api=$ca_api_key`
-	echo $ret;
-	url=${ret#SUCCESS:}
-	echo $root$url | $xclip;
-	echo $root$url;
-}
-
+# Same as vpaste.net. vpaste.net redirects to pastie.org
+# For vpaste.net: echo $paste | curl -F 'text=<-' http://vpaste.net/?bg=dark
 pastie() {
-	# http://pastie.org/904797
-	url=$(curl pastie.org/pastes -F "paste[body]=$paste" -F "paste[parser]=plaintext" -F "paste[authorization]=burger" -s -L -o /dev/null -w "%{url_effective}"); 
-	echo $url | $xclip;
+	#url=$(curl pastie.org/pastes/create -F "paste[body]=$paste" -F "paste[parser]=plaintext" -F "paste[authorization]=burger" -s -L -o /dev/null -w "%{url_effective}");
+	#echo $url | $xclip;
+	url=$(curl -X POST -H "Content-Type: application/x-www-form-urlencoded" http://pastie.org/pastes/create -d "content=$paste&language=plaintext&bg=dark" -s -o /dev/null -L -w "%{url_effective}");
 	echo $url;
 }
 
 # As of Jun 23, 2012 pidgin's nopaste gives 500 Internal Error
 pidgin() {
 	# pidgin
-	curl -s --data-urlencode "paste=$paste" -d "channel=#pidgin&nick=$nameXX" http://pidgin.im/nopaste/paste 
+	curl -s --data-urlencode "paste=$paste" -d "channel=#pidgin&nick=$nameXX" http://pidgin.im/nopaste/paste
 #| grep -A1 "This\ content\ is\ stored\ as" | awk -F \' '{print $2}'
 }
 
 paste2() {
 	# paste2
-	curl -s -F "code=$paste" -F "lang=text" http://paste2.org/;
-	#echo $url | $xclip;
-	#echo $url;
-}
-
-private_paste() {
-	# grep -o: 
-	url=`curl -s --location -F "paste_content=$paste" http://privatepaste.com/save | grep -o -m1 'Paste\ ID\ [a-z0-9].*' |awk '{print $3}'|awk -F '<' '{print $1}'`
-	#echo $url;
-	echo "http://privatepaste.com/$url" 
-	echo "http://privatepaste.com/$url" | $xclip;
-
+	curl -X POST -H "Content-Type: application/x-www-form-urlencoded" https://paste2.org -s -o /dev/null -d "code=$paste&lang=text" -L -w "%{url_effective}"
+	echo;
 }
 
 # as of April 15, 2015 - does not work.
+# forwards to cControl pastebin which has captcha
 tny_cz_paste() {
 	# http://tny.cz/index.php?act=submit
-#	
 	curl -s -F "input_text=$paste" -F "antispam=1" http://tny.cz/index.php?act=submit
 }
 
-clitxt_paste() {
-	url=`echo $paste | curl -s -F "upfile=@-" https://clitxt.com`;
-	echo $url;
-	echo $url | $xclip;
+
+paste_rs() {
+	echo "$paste" | curl --data-binary @- https://paste.rs/
+	echo
 }
 
-# form post, curl returns the html, filter it to get the url of the paste
-cxg.de_paste() {
-	url=`echo $paste | curl -s -F "pastetext=$paste" http://cxg.de/paste.php | \
-			grep http:\/\/cxg\.de\/_ - | awk -F \" '{print $2}' | head -1`
-	echo $url;
-	echo $url | $xclip;
+paste_haste() {
+	url="https://www.toptal.com/developers/hastebin/raw/"
+	curl -s -X POST https://www.toptal.com/developers/hastebin/documents -d "$paste" | awk -v url=$url -F \" '{print url$4}'
 }
 
+paste_dpaste() {
+	curl -s -X POST https://dpaste.com/api/v2/ -d "content=$paste" -d "title=paste"
+}
+
+paste_paste_bin() {
+	url=$(curl -D - -s -X POST https://paste-bin.xyz/index.php -d "paste_data=$paste" -L -w "%{url_effective}" -o /dev/null)
+	echo $url
+
+}
+
+# https://0paste.com/ goes to paste.myconan.net
+paste_paste_myconan_net() {
+	local token=$(curl -s https://paste.myconan.net | grep 'authenticity_token' | sed 's/.*value=\"//' | awk -F '"' '{print $1}')
+	local key=$(curl -s https://paste.myconan.net | grep 'paste\[key\]' | sed 's/.*value=\"//' | awk -F \" '{print $1}')
+	#echo "token: $token, key: $key"
+	curl -s -X POST https://paste.myconan.net \
+		-d "authenticity_token=$token" \
+		-d "paste[key]=$key" \
+		-d "paste[paste]=$paste" \
+		-d "paste[is_private]=0" | sed 's/.*href=\"//' | \
+		awk -F '"' '{print $1}'
+}
+
+# DNS record not found for pastee.ee!
+# https://pastee.github.io/docs/#submit-a-new-paste
+paste_pastee_ee() {
+	url="https://api.paste.ee/v1/pastes"
+	curl -X POST $url \
+		-H "Content-Type: application/json" \
+		-H "X-Auth-Token: meowmeowmeow" \
+		-D '{"description":"test","sections":[{"name":"Section1",
+			"syntax":"autodetect","contents":"'$paste'"}]}' # | awk -F \" '{print $3}'
+
+}
+
+# https://github.com/bokub/nopaste
+paste_nopaste_boris_sh() {
+	url="https://nopaste.boris.sh/#%s\n"
+	echo -n "$paste" | lzma | base64 -w0 | xargs -0 printf "$url"
+}
+
+paste_vpaste_net() {
+	echo $paste | curl -F 'text=<-' http://vpaste.net/?bg=dark
+}
+
+
+# Website has a capcha so not sure I can get this to work
+#paste_ghostbin() {
+#	url=$(curl -s -X POST https://paste.fo/create)
+#}
+
+# TODO: if incoming text has '&' then $data doesn't get
+# those characters after '&'
 get_paste() {
 	while read data; do
 		paste="$paste
@@ -175,17 +241,33 @@ while getopts ":$getopts_flags" opt; do
 			get_paste;
 			paste2
 			;;
-		r)
+		y)
 			get_paste;
-			private_paste
+			paste_rs
 			;;
-	 	x)
+		d)
 			get_paste;
-			clitxt_paste
+			paste_dpaste
 			;;
 		b)
-			get_paste;
-			cxg.de_paste
+			get_paste
+			paste_paste_bin
+			;;
+		c)
+			get_paste
+			paste_paste_myconan_net
+			;;
+		m)
+			get_paste
+			paste_nopaste_boris_sh
+			;;
+		v)
+			get_paste
+			paste_vpaste_net
+			;;
+		*)
+			get_paste
+			pastie
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -193,5 +275,3 @@ while getopts ":$getopts_flags" opt; do
 	esac
 done
 
-# Leave echo line so link from response can be read.
-echo
