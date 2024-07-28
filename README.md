@@ -22,7 +22,7 @@ linux command line script that uploads text to numerous pastebin-type sites. The
 Download the script from this repository, made it executable (`chmod x+r pastebin`) and run:
 `pastebin -h` for usage
 
-A config file 'pastebin.conf' is used for some variables. These are mostly for pastebin.com but any variables can be added that you want to use. The script looks for this file in $HOME/.pastebin.conf:
+A config file `pastebin.conf` is used for some variables. These are mostly for pastebin.com but any variables can be added that you want to use. The script looks for this file in `$HOME/.pastebin.conf`:
 
 * `name`: username used for some websites that will post the user of the pastebin
 * `ca_api_key`: Used for pastebin.ca if you want to use your own api key
