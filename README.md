@@ -12,11 +12,14 @@ linux command line script that uploads text to numerous pastebin-type sites. The
 * ~~tny.cz: http://tny.cz~~ Website has captcha
 * ~~clitxt.com: http://clitxt.com~~ Website times out
 * ~~cxg.de: http://cxg.de~~ Domain up for sale
+* ~~paste.ee~~ No dns record found
+* ~~ghostbin.com~~ has captcha so will not work
+* ~~hastebin.com~~ Forwards to another site
 * paste-bin.xyz
 * 0paste.com/paste.myconan.net
 * nopaste.ml
 * vpaste.net
-* 0x0.st - To be added
+* 0x0.st
 * textbin.net - To be added
 * txtbin.net - To be added
 * Want more sites? Submit an issue/PR with the website and I will see if I can add it.
