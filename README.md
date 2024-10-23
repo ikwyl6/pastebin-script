@@ -4,7 +4,7 @@ linux command line script that uploads text to numerous pastebin-type sites. The
 * pastebin.com: http://pastebin.com
 * ~~sprunge.us: http://sprunge.us~~ Page not found
 * ~~pastebin.ca: http://pastebin.ca~~ Website not up or 'Bad Gateway'
-* pasteie.org: http://pasteie.org
+* ~~pasteie.org: http://pasteie.org~~ No dns record
 * paste2.org: http://paste2.org
 * paste.rs
 * dpaste.com
@@ -16,6 +16,9 @@ linux command line script that uploads text to numerous pastebin-type sites. The
 * 0paste.com/paste.myconan.net
 * nopaste.ml
 * vpaste.net
+* 0x0.st - To be added
+* textbin.net - To be added
+* txtbin.net - To be added
 * Want more sites? Submit an issue/PR with the website and I will see if I can add it.
 
 ## How to get it, how to use it
