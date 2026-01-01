@@ -1,3 +1,4 @@
+#### NOTE: This repository has been archived and moved to: https://codeberg.org/ikwyl6/pastebin-script
 # pastebin-script
 linux command line script that uploads text to numerous pastebin-type sites. These sites include:
 
